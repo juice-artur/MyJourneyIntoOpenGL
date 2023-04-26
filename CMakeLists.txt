@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 set(PROJECT_NAME OpenGLJourney)
 project(${PROJECT_NAME})
 
-add_executable(${PROJECT_NAME} src/main.cpp src/shader.h)
+add_executable(${PROJECT_NAME} src/main.cpp src/shader.h src/stb_image.h src/stb_image.cpp)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)

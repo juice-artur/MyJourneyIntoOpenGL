@@ -15,4 +15,7 @@ target_link_libraries(${PROJECT_NAME} glfw)
 
 add_subdirectory(external/glad)
 target_link_libraries(${PROJECT_NAME} glad)
+
+add_subdirectory(external/glm)
+target_link_libraries(${PROJECT_NAME} glm)
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/src/shader DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

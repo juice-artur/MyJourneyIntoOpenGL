@@ -4,6 +4,10 @@
 #include "shader.h"
 #include "stb_image.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void ProcessInput(GLFWwindow* window);
 
@@ -42,10 +46,10 @@ int main(void)
     }
 
     float vertices[] = {
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,    //
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,   //
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,  //
-        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f    //
+        0.5f, 0.5f, 0.0f, 1.0f, 1.0f,    //
+        0.5f, -0.5f, 0.0f, 1.0f, 0.0f,   // 
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,  // 
+        -0.5f, 0.5f, 0.0f, 0.0f, 1.0f    // 
     };
 
     unsigned int indices[] = {
@@ -53,11 +57,6 @@ int main(void)
         1, 2, 3   //
     };
 
-    float texCoords[] = {
-        0.0f, 0.0f,  //
-        1.0f, 0.0f,  //
-        0.5f, 1.0f   //
-    };
 
     unsigned int VBO, VAO, EBO;
     glGenBuffers(1, &VBO);
@@ -74,14 +73,11 @@ int main(void)
 
     Shader ourShader("shader/baseVertexShader.vs", "shader/baseFragmentShader.fs");
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
 
     unsigned int texture1;
     glGenTextures(1, &texture1);
@@ -131,6 +127,7 @@ int main(void)
     glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
     ourShader.SetInt("texture2", 1);
 
+
     while (!glfwWindowShouldClose(window))
     {
         ProcessInput(window);
@@ -143,7 +140,14 @@ int main(void)
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
+        glm::mat4 transform = glm::mat4(1.0f); 
+        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
         ourShader.Use();
+        unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 

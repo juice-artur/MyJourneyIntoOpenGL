@@ -71,7 +71,7 @@ int main(void)
 
     glBindVertexArray(VAO);
 
-    Shader ourShader("shader/baseVertexShader.vs", "shader/baseFragmentShader.fs");
+    Shader ourShader("resources/shader/baseVertexShader.vs", "resources/shader/baseFragmentShader.fs");
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -89,7 +89,7 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, nrChannels;
-    unsigned char* data = stbi_load("../textures/wooden_container.jpg", &width, &height, &nrChannels, 0);
+    unsigned char* data = stbi_load("resources/textures/wooden_container.jpg", &width, &height, &nrChannels, 0);
 
     if (data)
     {
@@ -111,7 +111,7 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    data = stbi_load("../textures/awesomeface.png", &width, &height, &nrChannels, 0);
+    data = stbi_load("resources/textures/awesomeface.png", &width, &height, &nrChannels, 0);
     if (data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);

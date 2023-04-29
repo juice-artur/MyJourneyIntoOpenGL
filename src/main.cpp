@@ -128,7 +128,7 @@ int main(void)
 
     glBindVertexArray(VAO);
 
-    Shader ourShader("../resources/shader/baseVertexShader.vs", "../resources/shader/baseFragmentShader.fs");
+    Shader ourShader("../resources/shader/baseVertexShader.vert", "../resources/shader/baseFragmentShader.frag");
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);

@@ -167,7 +167,7 @@ int main(void)
         glm::mat4 model = glm::mat4(1.0f);
         lightingShader.SetMat4("model", model);
 
-        glBindVertexArray(lightVAO);
+        glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         lampShader.Use();
@@ -178,7 +178,7 @@ int main(void)
         model = glm::scale(model, glm::vec3(0.2f));
         lampShader.SetMat4("model", model);
 
-        glBindVertexArray(VAO);
+        glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glfwSwapBuffers(window);

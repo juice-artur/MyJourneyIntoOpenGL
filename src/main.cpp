@@ -26,6 +26,8 @@ float lastFrame = 0.0f;
 
 bool firstMouse = true;
 
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
 int main(void)
 {
     GLFWwindow* window;
@@ -63,47 +65,47 @@ int main(void)
     glEnable(GL_DEPTH_TEST);
 
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,  //
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,   //
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,    //
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,    //
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,   //
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,  //
-                                          //
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,   //
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,    //
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,     //
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,     //
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,    //
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,   //
-                                          //
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    //
-        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   //
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  //
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  //
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,   //
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    //
-                                          //
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,     //
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,    //
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,   //
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,   //
-        0.5f, -0.5f, 0.5f, 0.0f, 0.0f,    //
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,     //
-                                          //
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  //
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f,   //
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,    //
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,    //
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,   //
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  //
-                                          //
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,   //
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,    //
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,     //
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,     //
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,    //
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f    //
+        -0.5f, -0.5f, -0.5f,  //
+        0.5f, -0.5f, -0.5f,   //
+        0.5f, 0.5f, -0.5f,    //
+        0.5f, 0.5f, -0.5f,    //
+        -0.5f, 0.5f, -0.5f,   //
+        -0.5f, -0.5f, -0.5f,  //
+                              //
+        -0.5f, -0.5f, 0.5f,   //
+        0.5f, -0.5f, 0.5f,    //
+        0.5f, 0.5f, 0.5f,     //
+        0.5f, 0.5f, 0.5f,     //
+        -0.5f, 0.5f, 0.5f,    //
+        -0.5f, -0.5f, 0.5f,   //
+                              //
+        -0.5f, 0.5f, 0.5f,    //
+        -0.5f, 0.5f, -0.5f,   //
+        -0.5f, -0.5f, -0.5f,  //
+        -0.5f, -0.5f, -0.5f,  //
+        -0.5f, -0.5f, 0.5f,   //
+        -0.5f, 0.5f, 0.5f,    //
+                              //
+        0.5f, 0.5f, 0.5f,     //
+        0.5f, 0.5f, -0.5f,    //
+        0.5f, -0.5f, -0.5f,   //
+        0.5f, -0.5f, -0.5f,   //
+        0.5f, -0.5f, 0.5f,    //
+        0.5f, 0.5f, 0.5f,     //
+                              //
+        -0.5f, -0.5f, -0.5f,  //
+        0.5f, -0.5f, -0.5f,   //
+        0.5f, -0.5f, 0.5f,    //
+        0.5f, -0.5f, 0.5f,    //
+        -0.5f, -0.5f, 0.5f,   //
+        -0.5f, -0.5f, -0.5f,  //
+                              //
+        -0.5f, 0.5f, -0.5f,   //
+        0.5f, 0.5f, -0.5f,    //
+        0.5f, 0.5f, 0.5f,     //
+        0.5f, 0.5f, 0.5f,     //
+        -0.5f, 0.5f, 0.5f,    //
+        -0.5f, 0.5f, -0.5f,   //
     };
 
     glm::vec3 cubePositions[] = {
@@ -128,61 +130,20 @@ int main(void)
 
     glBindVertexArray(VAO);
 
-    Shader ourShader("../resources/shader/baseVertexShader.vert", "../resources/shader/baseFragmentShader.frag");
+    unsigned int lightVAO;
+    glGenVertexArrays(1, &lightVAO);
+    glBindVertexArray(lightVAO);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    Shader lightingShader("../resources/shader/object.vert", "../resources/shader/object.frag");
+    Shader lampShader("../resources/shader/lamp.vert", "../resources/shader/lamp.frag");
 
-    unsigned int texture1;
-    glGenTextures(1, &texture1);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    int width, height, nrChannels;
-    unsigned char* data = stbi_load("../resources/textures/wooden_container.jpg", &width, &height, &nrChannels, 0);
-
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
-
-    unsigned int texture2;
-    glGenTextures(1, &texture2);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    data = stbi_load("../resources/textures/awesomeface.png", &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
-
-    ourShader.Use();
-    glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
-    ourShader.SetInt("texture2", 1);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -196,39 +157,32 @@ int main(void)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-        glm::mat4 projection;
-        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-
-        int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-
-        unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-
-        unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-        glBindVertexArray(VAO);
+        lightingShader.Use();
+        lightingShader.SetVec3("objectColor", {1.0f, 0.5f, 0.31f});
+        lightingShader.SetVec3("lightColor", {1.0f, 1.0f, 1.0f});
 
         glm::mat4 view = camera.GetViewMatrix();
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
-        for (auto cubePosition : cubePositions)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePosition);
+        lightingShader.SetMat4("projection", projection);
+        lightingShader.SetMat4("view", view);
 
-            float angle = 20.0f;
-            model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0f, 0.3f, 0.5f));
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        glm::mat4 model = glm::mat4(1.0f);
+        lightingShader.SetMat4("model", model);
+
+        glBindVertexArray(lightVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        lampShader.Use();
+        lampShader.SetMat4("projection", projection);
+        lampShader.SetMat4("view", view);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f));
+        lampShader.SetMat4("model", model);
+
+        glBindVertexArray(lightVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -281,7 +235,7 @@ void MouseCallback(GLFWwindow* window, double xpos, double ypos)
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; 
+    float yoffset = lastY - ypos;
 
     lastX = xpos;
     lastY = ypos;

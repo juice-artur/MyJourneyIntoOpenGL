@@ -7,6 +7,10 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 class Shader
 {
 public:
@@ -91,5 +95,10 @@ public:
     void SetBool(const std::string& name, bool value) const { glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value); }
     void SetInt(const std::string& name, int value) const { glUniform1i(glGetUniformLocation(ID, name.c_str()), value); }
     void SetFloat(const std::string& name, float value) const { glUniform1f(glGetUniformLocation(ID, name.c_str()), value); }
+    void SetVec3(const std::string& name, glm::vec3 value) const { glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]); }
+    void SetMat4(const std::string& name, glm::mat4 mat) const
+    {
+        glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+    }
 };
 #endif

@@ -6,7 +6,7 @@ project(${PROJECT_NAME})
 file(GLOB_RECURSE SHADERS "resources/shader/*.*")
 source_group("Shaders" FILES ${SHADERS})
 
-add_executable(${PROJECT_NAME} src/main.cpp src/shader.h src/stb_image.h src/stb_image.cpp ${SHADERS})
+add_executable(${PROJECT_NAME} src/main.cpp src/shader.h src/stb_image.h src/stb_image.cpp src/camera.h  ${SHADERS})
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)

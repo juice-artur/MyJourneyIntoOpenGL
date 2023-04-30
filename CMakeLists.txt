@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 set(PROJECT_NAME OpenGLJourney)
 project(${PROJECT_NAME})
 
-file(GLOB_RECURSE SHADERS "resources/shader/*.*")
+file(GLOB_RECURSE SHADERS  ${CMAKE_CURRENT_SOURCE_DIR}/resources/shader/*.*)
 source_group("Shaders" FILES ${SHADERS})
 
 file(GLOB_RECURSE CPP_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)

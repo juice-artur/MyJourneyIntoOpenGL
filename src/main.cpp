@@ -168,8 +168,25 @@ int main(void)
 
         glm::mat4 model = glm::mat4(1.0f);
         lightingShader.SetMat4("model", model);
-        lightingShader.SetVec3("lightPos", lightPos);
         lightingShader.SetVec3("viewPos", camera.Position);
+
+        lightingShader.SetVec3("material.ambient", {1.0f, 0.5f, 0.31f});
+        lightingShader.SetVec3("material.diffuse", {1.0f, 0.5f, 0.31f});
+        lightingShader.SetVec3("material.specular", {0.5f, 0.5f, 0.5f});
+        lightingShader.SetFloat("material.shininess", 32.0f);
+
+        glm::vec3 lightColor;
+        lightColor.x = sin(glfwGetTime() * 2.0f);
+        lightColor.y = sin(glfwGetTime() * 0.7f);
+        lightColor.z = sin(glfwGetTime() * 1.3f);
+
+        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+
+        lightingShader.SetVec3("light.ambient", ambientColor);
+        lightingShader.SetVec3("light.diffuse", diffuseColor);
+        lightingShader.SetVec3("light.specular", {1.0f, 1.0f, 1.0f});
+        lightingShader.SetVec3("light.position", lightPos);
 
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);

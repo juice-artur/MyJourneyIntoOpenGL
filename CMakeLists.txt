@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
+set(CMAKE_CXX_COMPILER "C:/Program Files/LLVM/bin/clang++.exe")
+ set(CMAKE_CXX_STANDARD 17)
+ set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(PROJECT_NAME OpenGLJourney)
 project(${PROJECT_NAME})
 
@@ -26,6 +30,18 @@ add_subdirectory(external/glm)
 target_link_libraries(${PROJECT_NAME} glm)
 
 
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+set(ASSIMP_INSTALL OFF)
+
+add_subdirectory(external/assimp)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set_target_properties(assimp PROPERTIES UNITY_BUILD OFF)
+  set_target_properties(assimp PROPERTIES ENABLE_PCH OFF)
+endif()
+
+target_link_libraries(${PROJECT_NAME} assimp)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/binaries)
 set_property(TARGET ${PROJECT_NAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/binaries)

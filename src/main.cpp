@@ -9,6 +9,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void ProcessInput(GLFWwindow* window);
 void MouseCallback(GLFWwindow* window, double xpos, double ypos);
@@ -37,6 +41,8 @@ int main(void)
     {
         return -1;
     }
+
+    Assimp::Importer importer;
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -256,12 +262,11 @@ int main(void)
         lampShader.SetMat4("view", view);
         glBindVertexArray(lightVAO);
 
-
         for (unsigned int i = 0; i < 4; i++)
         {
             model = glm::mat4(1.0f);
             model = glm::translate(model, pointLightPositions[i]);
-            model = glm::scale(model, glm::vec3(0.2f));  
+            model = glm::scale(model, glm::vec3(0.2f));
             lampShader.SetMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }

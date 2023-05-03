@@ -36,6 +36,9 @@ bool firstMouse = true;
 
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
+bool blinn = false;
+bool blinnKeyPressed = false;
+
 int main(void)
 {
     GLFWwindow* window;
@@ -72,111 +75,42 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
 
-    float cubeVertices[] = {
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        -0.5f, -0.5f, -0.5f,  //
-        0.5f, -0.5f, -0.5f,   //
-        0.5f, 0.5f, -0.5f,    //
-        0.5f, 0.5f, -0.5f,    //
-        -0.5f, 0.5f, -0.5f,   //
-        -0.5f, -0.5f, -0.5f,  //
-                              //
-        -0.5f, -0.5f, 0.5f,   //
-        0.5f, -0.5f, 0.5f,    //
-        0.5f, 0.5f, 0.5f,     //
-        0.5f, 0.5f, 0.5f,     //
-        -0.5f, 0.5f, 0.5f,    //
-        -0.5f, -0.5f, 0.5f,   //
-                              //
-        -0.5f, 0.5f, 0.5f,    //
-        -0.5f, 0.5f, -0.5f,   //
-        -0.5f, -0.5f, -0.5f,  //
-        -0.5f, -0.5f, -0.5f,  //
-        -0.5f, -0.5f, 0.5f,   //
-        -0.5f, 0.5f, 0.5f,    //
-                              //
-        0.5f, 0.5f, 0.5f,     //
-        0.5f, 0.5f, -0.5f,    //
-        0.5f, -0.5f, -0.5f,   //
-        0.5f, -0.5f, -0.5f,   //
-        0.5f, -0.5f, 0.5f,    //
-        0.5f, 0.5f, 0.5f,     //
-                              //
-        -0.5f, -0.5f, -0.5f,  //
-        0.5f, -0.5f, -0.5f,   //
-        0.5f, -0.5f, 0.5f,    //
-        0.5f, -0.5f, 0.5f,    //
-        -0.5f, -0.5f, 0.5f,   //
-        -0.5f, -0.5f, -0.5f,  //
-                              //
-        -0.5f, 0.5f, -0.5f,   //
-        0.5f, 0.5f, -0.5f,    //
-        0.5f, 0.5f, 0.5f,     //
-        0.5f, 0.5f, 0.5f,     //
-        -0.5f, 0.5f, 0.5f,    //
-        -0.5f, 0.5f, -0.5f,   //
+    float planeVertices[] = {
+        10.0f, -0.5f, 10.0f, 0.0f, 1.0f, 0.0f, 10.0f, 0.0f,    //
+        -10.0f, -0.5f, 10.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,    //
+        -10.0f, -0.5f, -10.0f, 0.0f, 1.0f, 0.0f, 0.0f, 10.0f,  //
+                                                               //
+        10.0f, -0.5f, 10.0f, 0.0f, 1.0f, 0.0f, 10.0f, 0.0f,    //
+        -10.0f, -0.5f, -10.0f, 0.0f, 1.0f, 0.0f, 0.0f, 10.0f,  //
+        10.0f, -0.5f, -10.0f, 0.0f, 1.0f, 0.0f, 10.0f, 10.0f   //
     };
 
     Shader shader("../resources/shader/framebuffers.vert", "../resources/shader/framebuffers.frag");
 
-    unsigned int cubeVAO, cubeVBO;
-    glGenVertexArrays(1, &cubeVAO);
-    glGenBuffers(1, &cubeVBO);
-    glBindVertexArray(cubeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
+    unsigned int planeVAO, planeVBO;
+    glGenVertexArrays(1, &planeVAO);
+    glGenBuffers(1, &planeVBO);
+    glBindVertexArray(planeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-    unsigned int amount = 100000;
-    glm::mat4* modelMatrices;
-    modelMatrices = new glm::mat4[amount];
-    srand(glfwGetTime());
-    float radius = 150.0;
-    float offset = 25.0f;
-    for (unsigned int i = 0; i < amount; i++)
-    {
-        glm::mat4 model = glm::mat4(1.0f);
-
-        float angle = (float)i / (float)amount * 360.0f;
-        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float x = sin(angle) * radius + displacement;
-        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float y = displacement * 0.4f;
-        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float z = cos(angle) * radius + displacement;
-        model = glm::translate(model, glm::vec3(x, y, z));
-
-        float scale = (rand() % 20) / 100.0f + 0.05;
-        model = glm::scale(model, glm::vec3(scale));
-
-        float rotAngle = (rand() % 360);
-        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
-        modelMatrices[i] = model;
-    }
-
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
-
-    glBindVertexArray(cubeVAO);
-
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
-
-    glVertexAttribDivisor(1, 1);
-    glVertexAttribDivisor(2, 1);
-    glVertexAttribDivisor(3, 1);
-    glVertexAttribDivisor(4, 1);
-
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glBindVertexArray(0);
+
+    shader.Use();
+    shader.SetInt("texture1", 0);
+
+    glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+
+    unsigned int floorTexture = LoadTexture("../resources/textures/wood.png");
 
     while (!glfwWindowShouldClose(window))
     {
@@ -185,15 +119,20 @@ int main(void)
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 1000.0f);
-        glm::mat4 view = camera.GetViewMatrix();
         shader.Use();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
         shader.SetMat4("projection", projection);
         shader.SetMat4("view", view);
 
-        glBindVertexArray(cubeVAO);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 36, amount);
-        glBindVertexArray(0);
+        shader.SetVec3("viewPos", camera.Position);
+        shader.SetVec3("lightPos", lightPos);
+        shader.SetInt("blinn", blinn);
+
+        glBindVertexArray(planeVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -230,6 +169,18 @@ void ProcessInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
         camera.ProcessKeyboard(RIGHT, deltaTime);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !blinnKeyPressed)
+    {
+        blinn = !blinn;
+        blinnKeyPressed = true;
+
+        std::cout << (blinn ? "Blinn-Phong" : "Phong") << std::endl;
+    }
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
+    {
+        blinnKeyPressed = false;
     }
 }
 

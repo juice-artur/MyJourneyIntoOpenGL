@@ -72,52 +72,53 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
 
-  float cubeVertices[] = {
-         // координаты         
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
+    float cubeVertices[] = {
 
-        -0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
-
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f, -0.5f,
-
-        -0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,  //
+        0.5f, -0.5f, -0.5f,   //
+        0.5f, 0.5f, -0.5f,    //
+        0.5f, 0.5f, -0.5f,    //
+        -0.5f, 0.5f, -0.5f,   //
+        -0.5f, -0.5f, -0.5f,  //
+                              //
+        -0.5f, -0.5f, 0.5f,   //
+        0.5f, -0.5f, 0.5f,    //
+        0.5f, 0.5f, 0.5f,     //
+        0.5f, 0.5f, 0.5f,     //
+        -0.5f, 0.5f, 0.5f,    //
+        -0.5f, -0.5f, 0.5f,   //
+                              //
+        -0.5f, 0.5f, 0.5f,    //
+        -0.5f, 0.5f, -0.5f,   //
+        -0.5f, -0.5f, -0.5f,  //
+        -0.5f, -0.5f, -0.5f,  //
+        -0.5f, -0.5f, 0.5f,   //
+        -0.5f, 0.5f, 0.5f,    //
+                              //
+        0.5f, 0.5f, 0.5f,     //
+        0.5f, 0.5f, -0.5f,    //
+        0.5f, -0.5f, -0.5f,   //
+        0.5f, -0.5f, -0.5f,   //
+        0.5f, -0.5f, 0.5f,    //
+        0.5f, 0.5f, 0.5f,     //
+                              //
+        -0.5f, -0.5f, -0.5f,  //
+        0.5f, -0.5f, -0.5f,   //
+        0.5f, -0.5f, 0.5f,    //
+        0.5f, -0.5f, 0.5f,    //
+        -0.5f, -0.5f, 0.5f,   //
+        -0.5f, -0.5f, -0.5f,  //
+                              //
+        -0.5f, 0.5f, -0.5f,   //
+        0.5f, 0.5f, -0.5f,    //
+        0.5f, 0.5f, 0.5f,     //
+        0.5f, 0.5f, 0.5f,     //
+        -0.5f, 0.5f, 0.5f,    //
+        -0.5f, 0.5f, -0.5f,   //
     };
-	
-    // VAO куба
+
+    Shader shader("../resources/shader/framebuffers.vert", "../resources/shader/framebuffers.frag");
+
     unsigned int cubeVAO, cubeVBO;
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
@@ -127,54 +128,72 @@ int main(void)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
-    Shader shader("../resources/shader/framebuffers.vert", "../resources/shader/framebuffers.frag");
+    unsigned int amount = 100000;
+    glm::mat4* modelMatrices;
+    modelMatrices = new glm::mat4[amount];
+    srand(glfwGetTime());
+    float radius = 150.0;
+    float offset = 25.0f;
+    for (unsigned int i = 0; i < amount; i++)
+    {
+        glm::mat4 model = glm::mat4(1.0f);
 
-    shader.Use();
-    shader.SetInt("texture1", 0);
+        float angle = (float)i / (float)amount * 360.0f;
+        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float x = sin(angle) * radius + displacement;
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float y = displacement * 0.4f;
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float z = cos(angle) * radius + displacement;
+        model = glm::translate(model, glm::vec3(x, y, z));
 
-    unsigned int cubeTexture = LoadTexture("../resources/textures/wooden_container.jpg");
+        float scale = (rand() % 20) / 100.0f + 0.05;
+        model = glm::scale(model, glm::vec3(scale));
 
-    unsigned int uniformBlockIndexRed = glGetUniformBlockIndex(shader.ID, "Matrices");
-    glUniformBlockBinding(shader.ID, uniformBlockIndexRed, 0);
+        float rotAngle = (rand() % 360);
+        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+        modelMatrices[i] = model;
+    }
 
-    unsigned int uboMatrices;
-    glGenBuffers(1, &uboMatrices);
-    glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
 
-    glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));
+    glBindVertexArray(cubeVAO);
 
-    glm::mat4 projection = glm::perspective(45.0f, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-    glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+
+    glVertexAttribDivisor(1, 1);
+    glVertexAttribDivisor(2, 1);
+    glVertexAttribDivisor(3, 1);
+    glVertexAttribDivisor(4, 1);
+
+    glBindVertexArray(0);
 
     while (!glfwWindowShouldClose(window))
     {
-        float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
         ProcessInput(window);
-
-
-      
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
+        shader.Use();
+        shader.SetMat4("projection", projection);
+        shader.SetMat4("view", view);
 
         glBindVertexArray(cubeVAO);
-        shader.Use();
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-0.75f, 0.75f, 0.0f));  
-        shader.SetMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 36, amount);
+        glBindVertexArray(0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

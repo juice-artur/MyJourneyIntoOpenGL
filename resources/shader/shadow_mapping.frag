@@ -16,27 +16,35 @@ uniform vec3 viewPos;
 uniform float far_plane;
 uniform bool shadows;
 
+vec3 gridSamplingDisk[20] = vec3[]
+(
+   vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
+   vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+   vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+   vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+   vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
+
+
 float ShadowCalculation(vec3 fragPos)
 {
-    // Получаем вектор между положением фрагмента и положением источника света
     vec3 fragToLight = fragPos - lightPos;
-	
-    // Используем полученный вектор для выборки из карты глубины    
-    float closestDepth = texture(depthMap, fragToLight).r;
-	
-    // В данный момент значения лежат в диапазоне [0,1]. Преобразуем их обратно к исходным значениям
-    closestDepth *= far_plane;
-	
-    // Теперь получим текущую линейную глубину как длину между фрагментом и положением источника света
     float currentDepth = length(fragToLight);
-	
-    // Теперь проводим проверку на нахождение в тени
-    float bias = 0.05; // мы используем гораздо большее теневое смещение, так как значение глубины теперь находится в  диапазоне [near_plane, far_plane]
-    float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;        
-    
-	// отладка - отображение значений переменной closestDepth (для визуализации кубической карты глубины)
-    // FragColor = vec4(vec3(closestDepth / far_plane), 1.0);    
-        
+
+    float shadow = 0.0;
+    float bias = 0.15;
+    int samples = 20;
+    float viewDistance = length(viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;
+    for(int i = 0; i < samples; ++i)
+    {
+        float closestDepth = texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+        closestDepth *= far_plane; 
+        if(currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+    shadow /= float(samples);
+
     return shadow;
 }
 

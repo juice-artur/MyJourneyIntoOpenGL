@@ -40,10 +40,9 @@ bool firstMouse = true;
 
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
-bool shadows = true;
-bool shadowsKeyPressed = false;
-
-unsigned int planeVAO;
+bool bloom = true;
+bool bloomKeyPressed = false;
+float exposure = 1.0f;
 
 int main(void)
 {
@@ -82,41 +81,80 @@ int main(void)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
-    Shader shader("../resources/shader/shadow_mapping.vert", "../resources/shader/shadow_mapping.frag");
-    Shader simpleDepthShader("../resources/shader/shadow_mapping_depth.vert", "../resources/shader/shadow_mapping_depth.frag",
-        "../resources/shader/shadow_mapping_depth.geom");
+    Shader shader("../resources/shader/bloom.vert", "../resources/shader/bloom.frag");
+    Shader shaderLight("../resources/shader/bloom.vert", "../resources/shader/light_box.frag");
+    Shader shaderBlur("../resources/shader/blur.vert", "../resources/shader/blur.frag");
+    Shader shaderBloomFinal("../resources/shader/bloom_final.vert", "../resources/shader/bloom_final.frag");
 
-    unsigned int woodTexture = LoadTexture("../resources/textures/wood.png", false);
+    unsigned int woodTexture = LoadTexture("../resources/textures/wood.png", true);
+    unsigned int containerTexture = LoadTexture("../resources/textures/wooden_container_2.png", true);
 
-    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-    unsigned int depthMapFBO;
-    glGenFramebuffers(1, &depthMapFBO);
+    unsigned int hdrFBO;
+    glGenFramebuffers(1, &hdrFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 
-    unsigned int depthCubemap;
-    glGenTextures(1, &depthCubemap);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-    for (unsigned int i = 0; i < 6; ++i)
+    unsigned int colorBuffers[2];
+    glGenTextures(2, colorBuffers);
+    for (unsigned int i = 0; i < 2; i++)
     {
-        glTexImage2D(
-            GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0);
+    }
+
+    unsigned int rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCREEN_WIDTH, SCREEN_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+
+    unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(2, attachments);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) std::cout << "Framebuffer not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    unsigned int pingpongFBO[2];
+    unsigned int pingpongColorbuffers[2];
+    glGenFramebuffers(2, pingpongFBO);
+    glGenTextures(2, pingpongColorbuffers);
+    for (unsigned int i = 0; i < 2; i++)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+        glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorbuffers[i], 0);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) std::cout << "Framebuffer not complete!" << std::endl;
+    }
+
+    std::vector<glm::vec3> lightPositions;
+    lightPositions.push_back(glm::vec3(0.0f, 0.5f, 1.5f));
+    lightPositions.push_back(glm::vec3(-4.0f, 0.5f, -3.0f));
+    lightPositions.push_back(glm::vec3(3.0f, 0.5f, 1.0f));
+    lightPositions.push_back(glm::vec3(-.8f, 2.4f, -1.0f));
+
+    std::vector<glm::vec3> lightColors;
+    lightColors.push_back(glm::vec3(5.0f, 5.0f, 5.0f));
+    lightColors.push_back(glm::vec3(10.0f, 0.0f, 0.0f));
+    lightColors.push_back(glm::vec3(0.0f, 0.0f, 15.0f));
+    lightColors.push_back(glm::vec3(0.0f, 5.0f, 0.0f));
 
     shader.Use();
     shader.SetInt("diffuseTexture", 0);
-    shader.SetInt("depthMap", 1);
-
-    glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+    shaderBlur.Use();
+    shaderBlur.SetInt("image", 0);
+    shaderBloomFinal.Use();
+    shaderBloomFinal.SetInt("scene", 0);
+    shaderBloomFinal.SetInt("bloomBlur", 1);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -126,55 +164,112 @@ int main(void)
 
         ProcessInput(window);
 
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        float near_plane = 1.0f;
-        float far_plane = 25.0f;
-        glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, near_plane, far_plane);
-        std::vector<glm::mat4> shadowTransforms;
-        shadowTransforms.push_back(
-            shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-        shadowTransforms.push_back(
-            shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-        shadowTransforms.push_back(
-            shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
-        shadowTransforms.push_back(
-            shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-        shadowTransforms.push_back(
-            shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-
-        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        simpleDepthShader.Use();
-        for (unsigned int i = 0; i < 6; ++i)
-        {
-            simpleDepthShader.SetMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
-        }
-        simpleDepthShader.SetFloat("far_plane", far_plane);
-        simpleDepthShader.SetVec3("lightPos", lightPos);
-        RenderScene(simpleDepthShader);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        shader.Use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 model = glm::mat4(1.0f);
+        shader.Use();
         shader.SetMat4("projection", projection);
         shader.SetMat4("view", view);
-
-        shader.SetVec3("lightPos", lightPos);
-        shader.SetVec3("viewPos", camera.Position);
-        shader.SetInt("shadows", shadows);
-        shader.SetFloat("far_plane", far_plane);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodTexture);
+
+        for (unsigned int i = 0; i < lightPositions.size(); i++)
+        {
+            shader.SetVec3("lights[" + std::to_string(i) + "].Position", lightPositions[i]);
+            shader.SetVec3("lights[" + std::to_string(i) + "].Color", lightColors[i]);
+        }
+        shader.SetVec3("viewPos", camera.Position);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0));
+        model = glm::scale(model, glm::vec3(12.5f, 0.5f, 12.5f));
+        shader.SetMat4("model", model);
+        shader.SetMat4("model", model);
+        RenderCube();
+
+        glBindTexture(GL_TEXTURE_2D, containerTexture);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
+        model = glm::scale(model, glm::vec3(0.5f));
+        shader.SetMat4("model", model);
+        RenderCube();
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+        model = glm::scale(model, glm::vec3(0.5f));
+        shader.SetMat4("model", model);
+        RenderCube();
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, -1.0f, 2.0));
+        model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        shader.SetMat4("model", model);
+        RenderCube();
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 2.7f, 4.0));
+        model = glm::rotate(model, glm::radians(23.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        model = glm::scale(model, glm::vec3(1.25));
+        shader.SetMat4("model", model);
+        RenderCube();
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-2.0f, 1.0f, -3.0));
+        model = glm::rotate(model, glm::radians(124.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        shader.SetMat4("model", model);
+        RenderCube();
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-3.0f, 0.0f, 0.0));
+        model = glm::scale(model, glm::vec3(0.5f));
+        shader.SetMat4("model", model);
+        RenderCube();
+
+        shaderLight.Use();
+        shaderLight.SetMat4("projection", projection);
+        shaderLight.SetMat4("view", view);
+
+        for (unsigned int i = 0; i < lightPositions.size(); i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(lightPositions[i]));
+            model = glm::scale(model, glm::vec3(0.25f));
+            shaderLight.SetMat4("model", model);
+            shaderLight.SetVec3("lightColor", lightColors[i]);
+            RenderCube();
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        bool horizontal = true, first_iteration = true;
+        unsigned int amount = 10;
+        shaderBlur.Use();
+        for (unsigned int i = 0; i < amount; i++)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+            shaderBlur.SetInt("horizontal", horizontal);
+            glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpongColorbuffers[!horizontal]);
+            RenderQuad();
+            horizontal = !horizontal;
+            if (first_iteration) first_iteration = false;
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        shaderBloomFinal.Use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-        RenderScene(shader);
+        glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
+        shaderBloomFinal.SetInt("bloom", bloom);
+        shaderBloomFinal.SetFloat("exposure", exposure);
+        RenderQuad();
+
+        std::cout << "bloom: " << (bloom ? "on" : "off") << "| exposure: " << exposure << std::endl;
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -212,14 +307,26 @@ void ProcessInput(GLFWwindow* window)
     {
         camera.ProcessKeyboard(RIGHT, deltaTime);
     }
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !shadowsKeyPressed)
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !bloomKeyPressed)
     {
-        shadows = !shadows;
-        shadowsKeyPressed = true;
+        bloom = !bloom;
+        bloomKeyPressed = true;
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
     {
-        shadowsKeyPressed = false;
+        bloomKeyPressed = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        if (exposure > 0.0f)
+            exposure -= 0.001f;
+        else
+            exposure = 0.0f;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        exposure += 0.001f;
     }
 }
 

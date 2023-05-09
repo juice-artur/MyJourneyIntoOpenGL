@@ -92,6 +92,7 @@ public:
         if (geometryPath != nullptr) glDeleteShader(geometry);
     }
 
+
     void Use() const { glUseProgram(ID); }
 
     void SetBool(const std::string& name, bool value) const { glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value); }
